@@ -372,9 +372,19 @@ const pris = priser[setId];
     melding.textContent = "Åpner pakken ...";
 
     const trukket = [];
+const brukteIder = new Set();
 
 for (let i = 1; i <= 10; i++) {
-    trukket.push(trekkKort(alleKort[setId], i, setId));
+    let tilgjengelige = alleKort[setId].filter(
+        kort => !brukteIder.has(kort.id)
+    );
+
+    const kort = trekkKort(tilgjengelige, i, setId);
+
+    if (kort) {
+        trukket.push(kort);
+        brukteIder.add(kort.id);
+    }
 }
 
     const detaljer = await Promise.all(
