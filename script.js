@@ -37,8 +37,8 @@ const BSE_PRICE_USD = {
     "101": 5, "102": 5
 };
 
-let poeng = 10000;
-localStorage.setItem("pokemonSaldo", "10000");
+let poeng = Number(localStorage.getItem("pokemonSaldo"));
+if (!Number.isFinite(poeng) || poeng <= 0) poeng = 1000;
 
 let samling;
 try {
