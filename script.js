@@ -518,7 +518,24 @@ function visKort(kortListe, elementId) {
         bilde.alt = kort.name || "Pokémon-kort";
         bilde.loading = "lazy";
 
-        if (kort.image) {
+        const kortNavn = (kort.name || "").toLowerCase();
+        const id = (kort.id || "").toLowerCase();
+
+        if (kortNavn.includes("mew") || id.includes("mew")) {
+            if (kortNavn.includes("blue") || kortNavn.includes("blå")) {
+                bilde.src = "Bilder/blå-mew.jpg";
+            } else if (kortNavn.includes("green") || kortNavn.includes("grønn")) {
+                bilde.src = "Bilder/grønn-mew.jpg";
+            } else if (kortNavn.includes("red") || kortNavn.includes("rød")) {
+                bilde.src = "Bilder/rød-mew.jpg";
+            } else if (kort.image) {
+                bilde.src = `${kort.image}/high.webp`;
+                bilde.onerror = () => {
+                    bilde.onerror = null;
+                    bilde.src = `${kort.image}/low.webp`;
+                };
+            }
+        } else if (kort.image) {
             bilde.src = `${kort.image}/high.webp`;
             bilde.onerror = () => {
                 bilde.onerror = null;
