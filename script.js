@@ -89,7 +89,7 @@ function formaterPris(pris) {
 // Laster inn Pokémon-kortene
 async function lastInnKort() {
     try {
-        melding.textContent = "Laster inn kortsettene ...";
+        melding.textContent = "Kontakter kortdatabasen ...";
 
         const svar = await fetch("https://api.tcgdex.net/v2/en/sets");
         if (!svar.ok) throw new Error("Kunne ikke hente kortsettene.");
