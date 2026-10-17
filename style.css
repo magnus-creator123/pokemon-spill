@@ -1,0 +1,224 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #08111f;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    text-align: center;
+    padding: 30px 15px;
+    background: linear-gradient(135deg, #123b72, #111827);
+    border-bottom: 3px solid #ffcc33;
+}
+
+header h1 {
+    color: #ffcc33;
+    margin-bottom: 8px;
+}
+
+main {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+h2 {
+    margin-top: 30px;
+}
+
+.poeng-boks {
+    background: #14243b;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.pakker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.pakke {
+    text-align: center;
+    padding: 20px;
+    background: #14243b;
+    border: 1px solid #31527c;
+    border-radius: 12px;
+}
+
+.pakke img {
+    width: 100%;
+    max-width: 180px;
+    height: 100px;
+    object-fit: contain;
+}
+
+button {
+    padding: 12px 18px;
+    background: #ffcc33;
+    color: #111827;
+    font-weight: bold;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+button:hover {
+    background: #ffe17a;
+    transform: scale(1.04);
+}
+
+button:disabled {
+    background: #777;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.kort-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 18px;
+    margin-top: 15px;
+}
+
+.kort {
+    background: #14243b;
+    padding: 10px;
+    border: 1px solid #31527c;
+    border-radius: 10px;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.kort img {
+    width: 100%;
+    max-width: 230px;
+    display: block;
+    margin: auto;
+    border-radius: 6px;
+}
+
+.kort h3 {
+    font-size: 15px;
+}
+
+.kort p {
+    color: #d4dcec;
+    font-size: 13px;
+}
+
+.sjelden {
+    color: #ffcc33 !important;
+    font-weight: bold;
+}
+
+.samling-topp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#melding {
+    color: #ffcc33;
+    margin-top: 20px;
+}
+
+@media (max-width: 550px) {
+    .pakker {
+        grid-template-columns: 1fr;
+    }
+
+    main {
+        padding: 12px;
+    }
+}
+
+.neste-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#nesteKnapp {
+    min-width: 180px;
+    font-size: 16px;
+}
+
+#nyeKort .kort {
+    max-width: 320px;
+    width: 100%;
+    margin: 0 auto;
+    border: 2px solid #ffcc33;
+    animation: kortInn 0.35s ease;
+}
+
+@keyframes kortInn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.markedspris {
+    color: #8df5a6 !important;
+    font-weight: bold;
+}
+
+.kort small {
+    display: block;
+    color: #b9c5d6;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.kort-valg {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+#selgKnapp {
+    background: #e74c3c;
+    color: white;
+}
+
+#selgKnapp:hover {
+    background: #c0392b;
+}
+
+#beholdKnapp {
+    background: #2ecc71;
+    color: #102015;
+}
+
+#beholdKnapp:hover {
+    background: #27ae60;
+}
+
+.selg-samling {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.selg-samling:hover {
+    background: #c0392b;
+}
