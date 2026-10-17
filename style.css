@@ -222,3 +222,7 @@ button:disabled {
 .selg-samling:hover {
     background: #c0392b;
 }
+
+.pakke img.ascended-bilde {
+    transform: scale(1.3);
+}
