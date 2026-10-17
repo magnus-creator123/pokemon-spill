@@ -446,12 +446,6 @@ function visNesteKort() {
         return;
     }
 
-    .pakke img {
-    width: 100%;
-    height: 250px;
-    object-fit: contain;
-    display: block;
-}
 
     gjeldendeKort = kortSomSkalVelges.shift();
     kortNummer++;
