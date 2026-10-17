@@ -503,38 +503,19 @@ function beholdKort() {
 }
 
 // Viser kortbilder, navn og priser
-function visKort(kortListe, elementId) {
-    const område = document.getElementById(elementId);
-
-    if (!område) return;
-
-    område.innerHTML = "";
-
-    kortListe.forEach((kort, index) => {
-        const boks = document.createElement("article");
-        boks.className = "kort";
-
-        const bilde = document.createElement("img");
-        bilde.alt = kort.name || "Pokémon-kort";
-        bilde.loading = "lazy";
-
-        const kortNavn = (kort.name || "").toLowerCase();
+const kortNavn = (kort.name || "").toLowerCase();
         const id = (kort.id || "").toLowerCase();
 
         if (kortNavn.includes("mew") || id.includes("mew")) {
-            if (kortNavn.includes("blue") || kortNavn.includes("blå")) {
-                bilde.src = "Bilder/blå-mew.jpg";
-            } else if (kortNavn.includes("green") || kortNavn.includes("grønn")) {
-                bilde.src = "Bilder/grønn-mew.jpg";
-            } else if (kortNavn.includes("red") || kortNavn.includes("rød")) {
-                bilde.src = "Bilder/rød-mew.jpg";
-            } else if (kort.image) {
-                bilde.src = `${kort.image}/high.webp`;
-                bilde.onerror = () => {
-                    bilde.onerror = null;
-                    bilde.src = `${kort.image}/low.webp`;
-                };
-            }
+            const mewBilder = [
+                "Bilder/blå-mew.jpg",
+                "Bilder/grønn-mew.jpg",
+                "Bilder/rød-mew.jpg"
+            ];
+
+            bilde.src = mewBilder[
+                Math.floor(Math.random() * mewBilder.length)
+            ];
         } else if (kort.image) {
             bilde.src = `${kort.image}/high.webp`;
             bilde.onerror = () => {
@@ -542,63 +523,6 @@ function visKort(kortListe, elementId) {
                 bilde.src = `${kort.image}/low.webp`;
             };
         }
-
-        const navn = document.createElement("h3");
-        navn.textContent = kort.name || "Ukjent kort";
-
-        const sett = document.createElement("p");
-        sett.textContent = kort.setNavn || "";
-
-        const sjeldenhet = document.createElement("p");
-        sjeldenhet.className = "sjelden";
-        sjeldenhet.textContent = kort.rarity || kategori(kort);
-
-        const prisTekst = document.createElement("p");
-        prisTekst.className = "markedspris";
-
-        const pris = finnMarkedspris(kort);
-
-        if (pris !== null) {
-            prisTekst.textContent = "Markedspris: " + formaterPris(pris);
-        } else {
-            prisTekst.textContent =
-                "Anslått verdi: " + formaterPris(prisForSalg(kort).belop);
-        }
-
-        boks.append(bilde, navn, sett, sjeldenhet, prisTekst);
-
-        // Lag en salgsknapp bare for kort i samlingen
-        if (elementId === "samling") {
-            const selgKnapp = document.createElement("button");
-            selgKnapp.textContent = "Selg kortet";
-            selgKnapp.className = "selg-samling";
-
-            selgKnapp.onclick = () => {
-                const kortPris = prisForSalg(kort);
-
-                poeng += kortPris.belop;
-
-                // Fjern bare dette kortet fra samlingen
-                samling.splice(index, 1);
-
-                oppdaterPoeng();
-                lagreSpill();
-
-                document.getElementById("antallKort").textContent =
-                    samling.length;
-
-                visKort(samling, "samling");
-
-                melding.textContent =
-                    `Du solgte ${kort.name} for ${formaterPris(kortPris.belop)}!`;
-            };
-
-            boks.appendChild(selgKnapp);
-        }
-
-        område.appendChild(boks);
-    });
-}
 
 // Daglig bonus i spillet: én gang per lagret spill
 function hentBonus() {
