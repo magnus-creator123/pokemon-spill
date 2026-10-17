@@ -132,10 +132,9 @@ const funnet = {
         melding.textContent = "Klar! Velg en pakke.";
 
     } catch (feil) {
-        console.error(feil);
-        melding.textContent =
-            "Kunne ikke laste kortene. Oppdater siden og prøv igjen.";
-    }
+    console.error("FEIL VED INNLASTING AV KORT:", feil);
+    melding.textContent = "Feil: " + feil.message;
+}
 }
 
 // Bestemmer hvor sjeldent kortet er
