@@ -240,12 +240,20 @@ async function hentKortDetaljer(kort) {
 
 // Henter markedspris hvis prisdata finnes
 function finnMarkedspris(kort) {
-    const priser = kort.pricing;
+    if (kort.setId === "BSE") {
+        const usd = BSE_PRICE_USD[String(kort.localId)];
 
+        if (typeof usd === "number") {
+            return usd * USD_TIL_NOK;
+        }
+
+        return null;
+    }
+
+    const priser = kort.pricing;
     if (!priser) return null;
 
     const cm = priser.cardmarket;
-
     if (cm) {
         const euro = cm.trend ?? cm.avg ?? cm.avg30;
 
@@ -255,7 +263,6 @@ function finnMarkedspris(kort) {
     }
 
     const tcg = priser.tcgplayer;
-
     if (tcg) {
         const varianter = [
             tcg.holofoil,
