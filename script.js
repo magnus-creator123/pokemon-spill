@@ -96,13 +96,14 @@ async function lastInnKort() {
 
         const settListe = await svar.json();
 
-        const funnet = {
-    ASC: settListe.find(s =>
-        (s.name || "").toLowerCase().includes("ascended heroes")
-    ),
-    "30C": settListe.find(s =>
-        (s.name || "").toLowerCase().includes("30th celebration")
-    ),
+        const finnSett = (navn) =>
+    settListe.find(s =>
+        (s.name || "").toLowerCase().includes(navn)
+    );
+
+const funnet = {
+    ASC: finnSett("ascended heroes"),
+    "30C": finnSett("30th celebration"),
     BSE: settListe.find(s => s.id === "base1")
 };
 
