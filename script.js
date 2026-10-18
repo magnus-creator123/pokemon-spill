@@ -550,13 +550,12 @@ function visKort(kortListe, elementId) {
 
         const kortNavn = (kort.name || "").toLowerCase();
 
-        if (kortNavn.includes("mew")) {
+        if (kortNavn === "mew") {
             const mewBilder = [
-                "Bilder/blå-mew.jpg",
-                "Bilder/grønn-mew.jpg",
-                "Bilder/rød-mew.jpg"
-            ];
-
+    "Bilder/mew-blå.jpg",
+    "Bilder/mew-grønn.webp",
+    "Bilder/mew-rød.jpg"
+];
             bilde.src = mewBilder[
                 Math.floor(Math.random() * mewBilder.length)
             ];
