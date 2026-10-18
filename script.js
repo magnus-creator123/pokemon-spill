@@ -172,81 +172,76 @@ function kategori(kort) {
 
 // Trekker et tilfeldig kort
 function trekkKort(kortListe, plass, setId) {
-    const vanlige = kortListe.filter(k =>
-        ["Common", "Common 1", "Common 2"].includes(k.rarity)
-    );
+    const navn = k => (k.name || "").toLowerCase();
+    const rarity = k => (k.rarity || "").toLowerCase();
+    const id = k => String(k.localId || "").toUpperCase();
 
-    const uvanlige = kortListe.filter(k =>
-        (k.rarity || "").toLowerCase().includes("uncommon")
-    );
+    const erRGB = k =>
+        setId === "30C" &&
+        navn(k) === "mew" &&
+        ["R", "G", "B"].includes(id(k));
 
-    const sjeldne = kortListe.filter(k => {
-        const r = (k.rarity || "").toLowerCase();
-        return r.includes("rare") &&
-            !r.includes("double") &&
-            !r.includes("ultra") &&
-            !r.includes("illustration") &&
-            !r.includes("hyper") &&
-            !r.includes("secret") &&
-            !r.includes("special");
-    });
+    const erHit = k => {
+        const r = rarity(k);
+        const n = navn(k);
 
-    const hits = kortListe.filter(k => {
-        const r = (k.rarity || "").toLowerCase();
-        return (
+        return erRGB(k) ||
+            /\b(ex|vmax|vstar|gx)\b/i.test(n) ||
             r.includes("double rare") ||
             r.includes("ultra rare") ||
             r.includes("illustration rare") ||
             r.includes("special illustration") ||
             r.includes("hyper rare") ||
-            r.includes("secret rare")
-        );
-    });
+            r.includes("secret rare") ||
+            r.includes("rainbow rare") ||
+            r.includes("amazing rare");
+    };
 
-    const velg = liste =>
-        liste.length
-            ? liste[Math.floor(Math.random() * liste.length)]
-            : kortListe[Math.floor(Math.random() * kortListe.length)];
+    const trygge = kortListe.filter(k => !erHit(k));
+    const hits = kortListe.filter(k => erHit(k));
+    const rgbHits = hits.filter(k => erRGB(k));
+    const andreHits = hits.filter(k => !erRGB(k));
 
-    const tilfeldig = Math.random();
+    const velg = liste => liste.length
+        ? liste[Math.floor(Math.random() * liste.length)]
+        : null;
 
-    // Kort 1–5: Vanlige eller uvanlige kort
-    if (plass <= 5) {
-        return velg(vanlige.length ? vanlige : uvanlige);
-    }
-
-    // Kort 6–8: Vanlige 75 % / 70 %, uvanlige resten
+    // Kort 1–8: Bare kort som ikke er hits
     if (plass <= 8) {
-        const vanligSjanse = setId === "30C" ? 0.70 : 0.75;
-
-        if (tilfeldig < vanligSjanse) {
-            return velg(vanlige.length ? vanlige : uvanlige);
-        }
-
-        return velg(uvanlige.length ? uvanlige : sjeldne);
+        return velg(trygge) || velg(kortListe);
     }
 
-    // Kort 9: 6 % / 7 % sjanse for hit
-    if (plass === 9) {
-        const hitSjanse = setId === "30C" ? 0.07 : 0.06;
-
-        if (tilfeldig < hitSjanse && hits.length) {
-            return velg(hits);
-        }
-
-        return velg(sjeldne.length ? sjeldne : uvanlige);
+    // Kort 9–10: RGB Mew er ekstremt sjeldent
+    if (rgbHits.length && Math.random() < 0.004) {
+        return velg(rgbHits);
     }
 
-    // Kort 10: 1 % sjanse for superhit
-    if (plass === 10) {
-        if (tilfeldig < 0.01 && hits.length) {
-            return velg(hits);
-        }
+    // Andre hits: 1 % på kort 9, 2 % på kort 10
+    const hitSjanse = plass === 9 ? 0.50 : 0.80;
 
-        return velg(sjeldne.length ? sjeldne : uvanlige);
+    if (andreHits.length && Math.random() < hitSjanse) {
+        return velg(andreHits);
     }
 
-    return velg(vanlige.length ? vanlige : uvanlige);
+    return velg(trygge) || velg(kortListe);
+}
+
+function erHit(kort) {
+    const navn = (kort.name || "").toLowerCase();
+    const rarity = (kort.rarity || "").toLowerCase();
+
+    return /\b(ex|vmax|vstar|gx)\b/i.test(navn) ||
+        rarity.includes("double rare") ||
+        rarity.includes("ultra rare") ||
+        rarity.includes("illustration rare") ||
+        rarity.includes("special illustration") ||
+        rarity.includes("hyper rare") ||
+        rarity.includes("secret rare") ||
+        rarity.includes("rainbow rare") ||
+        rarity.includes("amazing rare") ||
+        rarity.includes("radiant") ||
+        rarity.includes("trainer gallery") ||
+        rarity.includes("special art");
 }
 
 // Henter detaljer og eventuell markedspris
@@ -275,6 +270,24 @@ async function hentKortDetaljer(kort) {
 
 // Henter markedspris hvis prisdata finnes
 function finnMarkedspris(kort) {
+
+    // Egne markedspriser for RGB Mew
+if (
+    kort.setId === "30C" &&
+    (kort.name || "").toLowerCase() === "mew"
+) {
+    const id = String(kort.localId || "").toUpperCase();
+
+    const rgbPriserUSD = {
+        R: 3213.27,
+        G: 3822.74,
+        B: 3738.75
+    };
+
+    if (Object.prototype.hasOwnProperty.call(rgbPriserUSD, id)) {
+        return rgbPriserUSD[id] * USD_TIL_NOK;
+    }
+}
     const priser = kort.pricing;
 
     // Base Set 1st Edition: bruk tilgjengelige
@@ -309,7 +322,16 @@ function finnMarkedspris(kort) {
             return reservepris * USD_TIL_NOK;
         }
 
+        const rarity = (kort.rarity || "").toLowerCase();
+
+if (rarity.includes("hyper rare")) return 500;
+if (rarity.includes("special illustration")) return 300;
+if (rarity.includes("illustration rare")) return 100;
+if (rarity.includes("ultra rare")) return 75;
+if (rarity.includes("double rare")) return 40;
+if (rarity.includes("rare")) return 10;
         return null;
+
     }
 
     // Behold prislogikken for de andre settene.
@@ -366,28 +388,26 @@ function prisForSalg(kort) {
 
 // Åpner en pakke med 10 kort
 async function apnePakke(setId) {
-    if (pakkeAktiv) {
-        melding.textContent =
-            "Selg eller behold kortet du ser på først!";
+    if (pakkeAktiv) return;
+
+    const kortListe = alleKort[setId];
+    let detaljer = [];
+
+    if (!kortListe || kortListe.length === 0) {
+        melding.textContent = "Kortene er ikke lastet inn ennå.";
         return;
     }
 
-    if (!alleKort[setId] || alleKort[setId].length === 0) {
-        melding.textContent =
-            "Kortene er ikke lastet inn ennå. Vent litt eller oppdater siden.";
-        return;
-    }
+    const pakkePriser = {
+        ASC: 200,
+        "30C": 200,
+        BSE: 500
+    };
 
-    const priser = {
-    ASC: 200,
-    "30C": 180,
-    BSE: 60000
-};
-
-const pris = priser[setId];
+    const pris = pakkePriser[setId] ?? 200;
 
     if (poeng < pris) {
-        melding.textContent = "Du har ikke nok penger!";
+        melding.textContent = "Du har ikke nok penger til denne pakken.";
         return;
     }
 
@@ -396,58 +416,119 @@ const pris = priser[setId];
 
     pakkeAktiv = true;
     kortNummer = 0;
-    melding.textContent = "Åpner pakken ...";
+    gjeldendeKort = null;
+    melding.textContent = "Gjør klar pakken ...";
 
-    const trukket = [];
-const brukteIder = new Set();
-
-for (let i = 1; i <= 10; i++) {
-    let tilgjengelige = alleKort[setId].filter(
-        kort => !brukteIder.has(kort.id)
-    );
-
-    const kort = trekkKort(tilgjengelige, i, setId);
-
-    if (kort) {
-        trukket.push(kort);
-        brukteIder.add(kort.id);
-    }
-}
-
-    const detaljer = await Promise.all(
-        trukket.map(kort => hentKortDetaljer(kort))
-    );
-
-    // Bland kortene før de vises
-    function kortScore(kort) {
-    const pris = finnMarkedspris(kort) || 0;
-
-    const r = (kort.rarity || "").toLowerCase();
-
-    let sjeldenhet = 0;
-
-    if (r.includes("common")) sjeldenhet = 1;
-    else if (r.includes("uncommon")) sjeldenhet = 2;
-    else if (r.includes("rare") && !r.includes("double")) sjeldenhet = 3;
-    else if (r.includes("double rare")) sjeldenhet = 4;
-    else if (
-        r.includes("illustration") ||
-        r.includes("ultra rare")
-    ) sjeldenhet = 5;
-    else if (
-        r.includes("special illustration") ||
-        r.includes("hyper rare") ||
-        r.includes("secret rare")
-    ) sjeldenhet = 6;
-
-    return sjeldenhet * 1000 + pris;
-}
-
-kortSomSkalVelges = detaljer.sort(
-    (a, b) => kortScore(a) - kortScore(b)
+    try {detaljer = await Promise.all(
+    kortListe.map(kort => hentKortDetaljer(kort))
 );
+        const navn = kort => (kort.name || "").toLowerCase();
+const rarity = kort => (kort.rarity || "").toLowerCase();
 
-    visNesteKort();
+const erRGBMew = kort =>
+    kort.setId === "30C" &&
+    navn(kort) === "mew" &&
+    ["R", "G", "B"].includes(
+        String(kort.localId || "").toUpperCase()
+    );
+
+const erHit = kort =>
+    erRGBMew(kort) ||
+    /\b(ex|vmax|vstar|gx)\b/i.test(navn(kort)) ||
+    rarity(kort).includes("double rare") ||
+    rarity(kort).includes("ultra rare") ||
+    rarity(kort).includes("illustration rare") ||
+    rarity(kort).includes("special illustration") ||
+    rarity(kort).includes("hyper rare") ||
+    rarity(kort).includes("secret rare") ||
+    rarity(kort).includes("rainbow rare") ||
+    rarity(kort).includes("amazing rare") ||
+    rarity(kort).includes("radiant") ||
+    rarity(kort).includes("trainer gallery") ||
+    rarity(kort).includes("special art");
+
+        const unikeKort = [...new Map(
+            detaljer.map(kort => [kort.id, kort])
+        ).values()];
+
+        const trygge = unikeKort.filter(kort => !erHit(kort));
+        const hits = unikeKort.filter(kort => erHit(kort));
+        const rgbHits = hits.filter(kort => erRGBMew(kort));
+        const andreHits = hits.filter(kort => !erRGBMew(kort));
+
+        if (trygge.length < 8) {
+            throw new Error("Fant ikke nok vanlige kort.");
+        }
+
+        const velg = liste =>
+            liste[Math.floor(Math.random() * liste.length)];
+
+        const valgte = [];
+        const brukteIder = new Set();
+
+        // Kort 1–8: Aldri hits
+        for (let i = 0; i < 8; i++) {
+            const tilgjengelige = trygge.filter(
+                kort => !brukteIder.has(kort.id)
+            );
+
+            const kort = velg(tilgjengelige);
+            valgte.push(kort);
+            brukteIder.add(kort.id);
+        }
+
+        // Kort 9–10: Vanlige kort eller hits
+        for (let plass = 9; plass <= 10; plass++) {
+            const tilgjengeligeVanlige = trygge.filter(
+                kort => !brukteIder.has(kort.id)
+            );
+
+            const tilgjengeligeHits = andreHits.filter(
+                kort => !brukteIder.has(kort.id)
+            );
+
+            const tilgjengeligeRGB = rgbHits.filter(
+                kort => !brukteIder.has(kort.id)
+            );
+
+            let valgt;
+
+            if (tilgjengeligeRGB.length && Math.random() < 0.004) {
+                valgt = velg(tilgjengeligeRGB);
+            } else {
+                const hitSjanse = plass === 9 ? 0.30 : 0.40;
+
+                if (
+                    tilgjengeligeHits.length &&
+                    Math.random() < hitSjanse
+                ) {
+                    valgt = velg(tilgjengeligeHits);
+                } else if (tilgjengeligeVanlige.length) {
+                    valgt = velg(tilgjengeligeVanlige);
+                } else {
+                    valgt = velg(tilgjengeligeHits);
+                }
+            }
+
+            if (!valgt) {
+                throw new Error("Fant ikke nok kort til pakken.");
+            }
+
+            valgte.push(valgt);
+            brukteIder.add(valgt.id);
+        }
+
+        kortSomSkalVelges = valgte;
+        visNesteKort();
+
+    } catch (feil) {
+        console.error(feil);
+        poeng += pris;
+        oppdaterPoeng();
+        pakkeAktiv = false;
+        melding.textContent =
+            "Kunne ikke lage pakken. Pengene er tilbakeført.";
+    }
 }
 
 // Viser ett kort om gangen
@@ -513,6 +594,32 @@ poeng += pris.belop;
     visNesteKort();
 }
 
+function selgFraSamling(indeks) {
+    const kort = samling[indeks];
+    if (!kort) return;
+
+    const pris = prisForSalg(kort);
+
+    if (pris.belop === null) {
+        melding.textContent =
+            "Dette kortet mangler en markedspris og kan ikke selges.";
+        return;
+    }
+
+    poeng += pris.belop;
+
+    samling.splice(indeks, 1);
+
+    oppdaterPoeng();
+    visKort(samling, "samling");
+
+    document.getElementById("antallKort").textContent =
+        samling.length;
+
+    melding.textContent =
+        `Du solgte ${kort.name} for ${formaterPris(pris.belop)}!`;
+}
+
 // BEHOLD KORT
 function beholdKort() {
     if (!gjeldendeKort) return;
@@ -540,7 +647,7 @@ function visKort(kortListe, elementId) {
 
     område.innerHTML = "";
 
-    kortListe.forEach(kort => {
+    kortListe.forEach((kort, indeks) => {
         const kortBoks = document.createElement("div");
         kortBoks.className = "kort";
 
@@ -550,23 +657,28 @@ function visKort(kortListe, elementId) {
 
         const kortNavn = (kort.name || "").toLowerCase();
 
-        if (kortNavn === "mew") {
-            const mewBilder = [
-    "Bilder/mew-blå.jpg",
-    "Bilder/mew-grønn.webp",
-    "Bilder/mew-rød.jpg"
-];
-            bilde.src = mewBilder[
-                Math.floor(Math.random() * mewBilder.length)
-            ];
-        } else if (kort.image) {
-            bilde.src = `${kort.image}/high.webp`;
+        const mewFarge = String(kort.localId || "").toUpperCase();
 
-            bilde.onerror = () => {
-                bilde.onerror = null;
-                bilde.src = `${kort.image}/low.webp`;
-            };
-        }
+if (
+    kort.setId === "30C" &&
+    kortNavn === "mew" &&
+    ["R", "G", "B"].includes(mewFarge)
+) {
+    const mewBilder = {
+        B: "Bilder/mew-blå.jpg",
+        G: "Bilder/mew-grønn.webp",
+        R: "Bilder/mew-rød.jpg"
+    };
+
+    bilde.src = mewBilder[mewFarge];
+} else if (kort.image) {
+    bilde.src = `${kort.image}/high.webp`;
+
+    bilde.onerror = () => {
+        bilde.onerror = null;
+        bilde.src = `${kort.image}/low.webp`;
+    };
+}
 
         const navn = document.createElement("h3");
         navn.textContent = kort.name || "Ukjent kort";
@@ -574,19 +686,35 @@ function visKort(kortListe, elementId) {
         const sett = document.createElement("p");
         sett.textContent = kort.setNavn || "";
 
-            const prisTekst = document.createElement("p");
+        const prisTekst = document.createElement("p");
         const pris = finnMarkedspris(kort);
 
-        if (pris !== null) {
-            prisTekst.textContent = "Pris: " + formaterPris(pris);
-        } else {
-            prisTekst.textContent = "Pris: Ikke tilgjengelig";
-        }
+        prisTekst.textContent = pris !== null
+            ? "Pris: " + formaterPris(pris)
+            : "Pris: Ikke tilgjengelig";
 
         kortBoks.appendChild(bilde);
         kortBoks.appendChild(navn);
         kortBoks.appendChild(sett);
         kortBoks.appendChild(prisTekst);
+
+        // Bare kort i samlingen får egen salgsknapp
+        if (elementId === "samling") {
+            const selgKnapp = document.createElement("button");
+            selgKnapp.textContent = pris !== null
+                ? "Selg for " + formaterPris(pris)
+                : "Kan ikke selges";
+
+            selgKnapp.disabled = pris === null;
+
+            selgKnapp.addEventListener("click", () => {
+                selgFraSamling(indeks);
+            });
+
+            kortBoks.appendChild(selgKnapp);
+
+            
+        }
 
         område.appendChild(kortBoks);
     });
