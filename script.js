@@ -6,37 +6,41 @@ const SETT = {
 
 const EUR_TIL_NOK = 11.7;
 const USD_TIL_NOK = 10.2;
-
-// Prisene for ugraderte Base Set 1st Edition-kort i USD
+// PriceCharting: ugraderte Base Set 1st Edition-kort
+// Prisene her er i amerikanske dollar (USD)
 const BSE_PRICE_USD = {
     "1": 651, "2": 1250, "3": 400, "4": 12706,
     "5": 288.46, "6": 446.84, "7": 306.69, "8": 15.19,
     "9": 300, "10": 345, "11": 416.89, "12": 430.61,
     "13": 360, "14": 345.06, "15": 1154.86, "16": 331.51,
+
     "17": 18, "18": 50, "19": 25, "20": 25,
     "21": 22, "22": 25, "23": 12, "24": 15,
     "25": 12, "26": 10, "27": 8, "28": 8,
     "29": 10, "30": 20, "31": 8, "32": 8,
     "33": 7, "34": 7, "35": 12, "36": 10,
     "37": 10, "38": 8, "39": 12, "40": 8,
-    "41": 7, "42": 15, "43": 8, "44": 200,
-    "45": 5, "46": 129.98, "47": 5, "48": 5,
-    "49": 5, "50": 6, "51": 5, "52": 5,
-    "53": 6, "54": 6, "55": 5, "56": 6,
-    "57": 10, "58": 190, "59": 6, "60": 5,
-    "61": 5, "62": 6, "63": 104.07, "64": 5,
-    "65": 5, "66": 5, "67": 6, "68": 5,
-    "69": 5, "70": 20, "71": 12, "72": 15,
-    "73": 10, "74": 25, "75": 12, "76": 20,
-    "77": 12, "78": 20, "79": 12, "80": 6,
-    "81": 5, "82": 6, "83": 8, "84": 6,
-    "85": 10, "86": 8, "87": 5, "88": 10,
-    "89": 8, "90": 5, "91": 5, "92": 5,
-    "93": 5, "94": 4, "95": 5, "96": 30,
+    "41": 7, "42": 15,
+
+    "43": 8, "44": 200, "45": 5, "46": 129.98,
+    "47": 5, "48": 5, "49": 5, "50": 6,
+    "51": 5, "52": 5, "53": 5, "54": 6,
+    "55": 5, "56": 6, "57": 10, "58": 190,
+    "59": 6, "60": 5, "61": 5, "62": 6,
+    "63": 104.07, "64": 5, "65": 5, "66": 5,
+    "67": 6, "68": 5, "69": 5,
+
+    "70": 20, "71": 12, "72": 15, "73": 10,
+    "74": 25, "75": 12, "76": 20, "77": 12,
+    "78": 20, "79": 12, "80": 6, "81": 5,
+    "82": 6, "83": 8, "84": 6, "85": 10,
+    "86": 8, "87": 5, "88": 10, "89": 8,
+    "90": 5, "91": 5, "92": 5, "93": 5,
+    "94": 4, "95": 5, "96": 30,
+
     "97": 5, "98": 5, "99": 5, "100": 5,
     "101": 5, "102": 5
 };
-
 let poeng = Number(localStorage.getItem("pokemonSaldo"));
 if (!Number.isFinite(poeng) || poeng <= 0) poeng = 1000;
 
@@ -89,7 +93,7 @@ function formaterPris(pris) {
 // Laster inn Pokémon-kortene
 async function lastInnKort() {
     try {
-        melding.textContent = "Kontakter kortdatabasen ...";
+        melding.textContent = "Laster inn kortsettene ...";
 
         const svar = await fetch("https://api.tcgdex.net/v2/en/sets");
         if (!svar.ok) throw new Error("Kunne ikke hente kortsettene.");
@@ -132,9 +136,10 @@ const funnet = {
         melding.textContent = "Klar! Velg en pakke.";
 
     } catch (feil) {
-    console.error("FEIL VED INNLASTING AV KORT:", feil);
-    melding.textContent = "Feil: " + feil.message;
-}
+        console.error(feil);
+        melding.textContent =
+            "Kunne ikke laste kortene. Oppdater siden og prøv igjen.";
+    }
 }
 
 // Bestemmer hvor sjeldent kortet er
@@ -270,20 +275,48 @@ async function hentKortDetaljer(kort) {
 
 // Henter markedspris hvis prisdata finnes
 function finnMarkedspris(kort) {
-    if (kort.setId === "BSE") {
-        const usd = BSE_PRICE_USD[String(kort.localId)];
+    const priser = kort.pricing;
 
-        if (typeof usd === "number") {
-            return usd * USD_TIL_NOK;
+    // Base Set 1st Edition: bruk tilgjengelige
+    // priser for førsteutgaven hvis de finnes.
+    if (kort.setId === "BSE") {
+        const tcg = priser?.tcgplayer;
+
+        const varianter = [
+            tcg?.["1st-edition-holofoil"],
+            tcg?.["1st-edition"],
+            tcg?.["1stEditionHolofoil"],
+            tcg?.["1stEdition"]
+        ];
+
+        for (const variant of varianter) {
+            const usd =
+                variant?.marketPrice ??
+                variant?.midPrice ??
+                variant?.market ??
+                variant?.mid;
+
+            if (typeof usd === "number" && usd > 0) {
+                return usd * USD_TIL_NOK;
+            }
+        }
+
+        // Bruk bare en gammel reservepris dersom
+        // API-et ikke har en oppdatert pris.
+        const reservepris = BSE_PRICE_USD[String(kort.localId)];
+
+        if (typeof reservepris === "number") {
+            return reservepris * USD_TIL_NOK;
         }
 
         return null;
     }
 
-    const priser = kort.pricing;
+    // Behold prislogikken for de andre settene.
     if (!priser) return null;
 
     const cm = priser.cardmarket;
+
     if (cm) {
         const euro = cm.trend ?? cm.avg ?? cm.avg30;
 
@@ -293,6 +326,7 @@ function finnMarkedspris(kort) {
     }
 
     const tcg = priser.tcgplayer;
+
     if (tcg) {
         const varianter = [
             tcg.holofoil,
@@ -312,29 +346,22 @@ function finnMarkedspris(kort) {
     return null;
 }
 
-// Hvis et kort mangler prisdata, får det en anslått salgsverdi
+// Finner salgsverdi uten å finne på en pris
 function prisForSalg(kort) {
     const markedspris = finnMarkedspris(kort);
 
     if (markedspris !== null) {
-        return { belop: markedspris, anslag: false };
+        return {
+            belop: markedspris,
+            anslag: false
+        };
     }
 
-    const sjeldenhet = kategori(kort);
-
-    if (sjeldenhet === "Veldig sjelden") {
-        return { belop: 25, anslag: true };
-    }
-
-    if (sjeldenhet === "Sjelden") {
-        return { belop: 8, anslag: true };
-    }
-
-    if (sjeldenhet === "Uvanlig") {
-        return { belop: 1, anslag: true };
-    }
-
-    return { belop: 0.4, anslag: true };
+    // Ikke bruk en falsk standardpris
+    return {
+        belop: null,
+        anslag: true
+    };
 }
 
 // Åpner en pakke med 10 kort
@@ -446,7 +473,6 @@ function visNesteKort() {
         return;
     }
 
-
     gjeldendeKort = kortSomSkalVelges.shift();
     kortNummer++;
 
@@ -470,7 +496,13 @@ function selgKort() {
     const kort = gjeldendeKort;
     const pris = prisForSalg(kort);
 
-    poeng += pris.belop;
+if (pris.belop === null) {
+    melding.textContent =
+        "Dette kortet mangler en markedspris og kan ikke selges ennå.";
+    return;
+}
+
+poeng += pris.belop;
     oppdaterPoeng();
 
     melding.textContent =
@@ -502,11 +534,23 @@ function beholdKort() {
     visNesteKort();
 }
 
-// Viser kortbilder, navn og priser
-const kortNavn = (kort.name || "").toLowerCase();
-        const id = (kort.id || "").toLowerCase();
+function visKort(kortListe, elementId) {
+    const område = document.getElementById(elementId);
+    if (!område) return;
 
-        if (kortNavn.includes("mew") || id.includes("mew")) {
+    område.innerHTML = "";
+
+    kortListe.forEach(kort => {
+        const kortBoks = document.createElement("div");
+        kortBoks.className = "kort";
+
+        const bilde = document.createElement("img");
+        bilde.alt = kort.name || "Pokémon-kort";
+        bilde.loading = "lazy";
+
+        const kortNavn = (kort.name || "").toLowerCase();
+
+        if (kortNavn.includes("mew")) {
             const mewBilder = [
                 "Bilder/blå-mew.jpg",
                 "Bilder/grønn-mew.jpg",
@@ -518,11 +562,26 @@ const kortNavn = (kort.name || "").toLowerCase();
             ];
         } else if (kort.image) {
             bilde.src = `${kort.image}/high.webp`;
+
             bilde.onerror = () => {
                 bilde.onerror = null;
                 bilde.src = `${kort.image}/low.webp`;
             };
         }
+
+        const navn = document.createElement("h3");
+        navn.textContent = kort.name || "Ukjent kort";
+
+        const sett = document.createElement("p");
+        sett.textContent = kort.setNavn || "";
+
+        kortBoks.appendChild(bilde);
+        kortBoks.appendChild(navn);
+        kortBoks.appendChild(sett);
+
+        område.appendChild(kortBoks);
+    });
+}
 
 // Daglig bonus i spillet: én gang per lagret spill
 function hentBonus() {
