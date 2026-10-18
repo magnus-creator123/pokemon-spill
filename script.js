@@ -574,9 +574,19 @@ function visKort(kortListe, elementId) {
         const sett = document.createElement("p");
         sett.textContent = kort.setNavn || "";
 
+            const prisTekst = document.createElement("p");
+        const pris = finnMarkedspris(kort);
+
+        if (pris !== null) {
+            prisTekst.textContent = "Pris: " + formaterPris(pris);
+        } else {
+            prisTekst.textContent = "Pris: Ikke tilgjengelig";
+        }
+
         kortBoks.appendChild(bilde);
         kortBoks.appendChild(navn);
         kortBoks.appendChild(sett);
+        kortBoks.appendChild(prisTekst);
 
         område.appendChild(kortBoks);
     });
